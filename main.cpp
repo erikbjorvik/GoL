@@ -6,7 +6,7 @@ int main(int argc, char **argv)
 
     // create window and view it
     MainWindow window;
-    window.setTitle("A Simple Graphical Window");
+    window.setTitle("Game of Life Erik Bjørvik");
     window.show();
 
     return app.exec();

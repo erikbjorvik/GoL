@@ -49,10 +49,6 @@ MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
     generasjon[20116] = true;
     generasjon[20117] = true;
 
-
-
-
-
 }
 
 
