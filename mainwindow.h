@@ -14,11 +14,14 @@ public:
 
     void render(QPainter *painter);
     QTimer *timer;
-    std::vector< std::vector< int > > celleListe; //4d-vektor.
-    std::vector< std::vector< int > > neste; //for neste generasjon.
+    //int celleListe[]; //4d-vektor.
+    //std::vector< std::vector< int > > neste; //for neste generasjon.
     int hoyde;
     int vidde;
-    int generasjon;
+    int generasjonNr;
+    bool generasjon[40000];
+    bool neste[40000];
+
 
 public slots:
     void renderLater();

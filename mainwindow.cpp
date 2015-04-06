@@ -4,51 +4,64 @@ MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
 {
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(nyGenerasjon()));
-    timer->start(5000); //Hver generasjon varer i 50ms.
+    timer->start(50); //Hver generasjon varer i 50ms.
 
     // set up viewing window
     create();
     setGeometry(100, 100, 600, 600); // set resolution of window
 
-    generasjon = 0;
+    generasjonNr = 0;
     //fyll array:
-    int linje = 0;
-    std::vector<int> nyLinje;
     for (int i = 0; i<40000; i++) {
-
-        nyLinje.push_back((rand()%2));
-        nyLinje.push_back(i%200);
-
-        if ((i%200)==0 && i!=0) {
-            linje++;
-        }
-
-        nyLinje.push_back(linje);
-        celleListe.push_back(nyLinje);
+        generasjon[i] = false;
     }
+
+    generasjon[20080] = true;
+    generasjon[20081] = true;
+    generasjon[20082] = true;
+    generasjon[20083] = true;
+    generasjon[20084] = true;
+    generasjon[20085] = true;
+    generasjon[20086] = true;
+    generasjon[20087] = true;
+
+    generasjon[20089] = true;
+    generasjon[20090] = true;
+    generasjon[20091] = true;
+    generasjon[20092] = true;
+    generasjon[20093] = true;
+
+    generasjon[20097] = true;
+    generasjon[20098] = true;
+    generasjon[20099] = true;
+
+    generasjon[20105] = true;
+    generasjon[20106] = true;
+    generasjon[20107] = true;
+    generasjon[20108] = true;
+    generasjon[20109] = true;
+    generasjon[20110] = true;
+    generasjon[20111] = true;
+
+    generasjon[20113] = true;
+    generasjon[20114] = true;
+    generasjon[20115] = true;
+    generasjon[20116] = true;
+    generasjon[20117] = true;
+
+
+
+
 
 }
 
-/*id  -  tilstand  -  plass_x  - plass_y
-  0          1          +1        +0
-  1          0          +2        +0
-  3          0          +3        +3
-*/
 
 void MainWindow::nyGenerasjon() {
-    qDebug() << "Ny generasjon";
-    /*QPaintDevice *device = backingStore.paintDevice();
-    QPainter painter(device);
-    render(&painter);*/
+    if (generasjonNr!=0)
+        std::copy(neste,neste+40000,generasjon);
 
     renderLater();
-
-    if (generasjon!=0) {
-        celleListe.clear();
-        celleListe = neste;
-    }
-
-    generasjon++;
+    generasjonNr++;
 }
 
 // the main rendering method
@@ -80,59 +93,61 @@ void MainWindow::renderNow()
 // draw stuff inside window here
 void MainWindow::render(QPainter *painter)
 {
-    int celleVidde;
-    int celleHoyde;
     int xKor = 0;
     int yKor = 0;
     QColor farge;
-    int antallNaboer = 0;
-    std::vector<int> nesteGLinje;
+    int antallNaboer;
+    bool nesteCelle;
+
    for (int i = 0; i<40000; i++) {
-
-       if (i==0)
-           nesteGLinje.clear();
-
-
-        if (celleListe.at(i).at(0)!=0)
+       antallNaboer=0;
+       nesteCelle = false;
+        if (generasjon[i]!=false)
         farge = QColor((rand() % 255),(rand() % 255),(rand() % 255));
         else
         farge = QColor(Qt::white);
 
-        celleVidde = width()/200;
-        celleHoyde = height()/200;
 
         //qDebug()<<"cellevidde: " << celleVidde << "cellehoyde" << celleHoyde;
 
-        painter->fillRect(xKor,yKor,celleVidde,celleHoyde,farge); //cellene vil tilpasse seg vindustr.
+        painter->fillRect(xKor,yKor,width()/200,height()/200,farge); //cellene vil tilpasse seg vindustr.
 
-        //for neste generasjon:
-
-
-
-        if (((i)%199)!=0 && celleListe.at(i+1).at(0)==1) //høyre
+        if (((i)%199)!=0 && i!=0 && generasjon[i+1]==true) //høyre
             antallNaboer++;
-        if (((i)%199)!=1 && i!=0 && celleListe.at(i-1).at(0)==1) //venstre
+        if (((i)%199)!=1 && i!=0 && generasjon[i-1]==true) //venstre
             antallNaboer++;
-        if ((i>199) && celleListe.at(i-199).at(0)==1) //over
+        if ((i>199) && generasjon[i-200]==true) //over
             antallNaboer++;
-        if ((i<39601) && celleListe.at(i+199).at(0)==1) //under
+        if ((i<39601) && generasjon[i+200]==true) //under
+            antallNaboer++;
+        if ((i>199) && ((i)%199)!=1 && i!=0 && generasjon[i-199]==true) //over-venstre
+            antallNaboer++;
+        if ((i>199) && ((i)%199)!=0 && i!=0 && generasjon[i-201]==true) //over-høyre
+            antallNaboer++;
+        if ((i<39799) && ((i)%199)!=1 && i!=0 && generasjon[i+199]==true) //under-venstre
+            antallNaboer++;
+        if ((i<39799) && ((i)%199)!=0 && i!=0 && generasjon[i+201]==true) //under-venstre
             antallNaboer++;
 
-        if (celleListe.at(i).at(0)==1) {
-            if (antallNaboer<2 || antallNaboer>3)
-               nesteGLinje.push_back(0);
-            else if (antallNaboer==2 || antallNaboer==3)
-                nesteGLinje.push_back(1);
+
+        if (generasjon[i]==true) {
+            if (antallNaboer<2 || antallNaboer>3){
+                nesteCelle = false;
+            }
+            else if (antallNaboer==2 || antallNaboer==3){
+                nesteCelle = true;
+            }
 
         }
-        else if (celleListe.at(i).at(0)==0 && antallNaboer==3)
-            nesteGLinje.push_back(1);
+        else if (generasjon[i]==false && antallNaboer==3){
+                nesteCelle = true;
+        }
 
-        neste.push_back(nesteGLinje);
+        neste[i] = nesteCelle;
 
-        xKor += celleVidde;
+        xKor += (width()/200);
         if ((i%200)==0 && i!=0) {
-            yKor += celleHoyde;
+            yKor += height()/200;
             xKor = 0;
         }
 
