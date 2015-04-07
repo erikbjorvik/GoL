@@ -3,6 +3,7 @@
 
 #include <QtGui>
 #include <QDebug>
+#include <cstdio>
 
 class MainWindow : public QWindow
 {
@@ -14,13 +15,14 @@ public:
 
     void render(QPainter *painter);
     QTimer *timer;
-    //int celleListe[]; //4d-vektor.
-    //std::vector< std::vector< int > > neste; //for neste generasjon.
     int hoyde;
     int vidde;
     int generasjonNr;
     bool generasjon[40000];
     bool neste[40000];
+
+    const char* filnavn;
+    void lesFil(const char* const filnavn);
 
 
 public slots:
@@ -33,6 +35,8 @@ protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
     void exposeEvent(QExposeEvent *event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* ev);
+
+     void contextMenuEvent(QContextMenuEvent *event);
 
 private:
     QBackingStore backingStore; // drawing area

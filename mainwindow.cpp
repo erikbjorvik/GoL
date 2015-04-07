@@ -1,4 +1,8 @@
 #include "mainwindow.h"
+#include <QMenuBar>
+#include <fstream>
+#include <QMessageBox>
+
 
 MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
 {
@@ -15,6 +19,8 @@ MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
     for (int i = 0; i<40000; i++) {
         generasjon[i] = false;
     }
+
+    lesFil("/Users/ErikBjorvik/untitled1/test.txt");
 
     generasjon[20080] = true;
     generasjon[20081] = true;
@@ -51,6 +57,18 @@ MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
 
 }
 
+void MainWindow::lesFil(const char* const filnavn) {
+    QFile file(filnavn);
+    file.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&file);
+
+    while(!in.atEnd())
+    qDebug()<<"innhold: " << in.readLine();
+    file.close();
+
+
+
+}
 
 void MainWindow::nyGenerasjon() {
     if (generasjonNr!=0)
