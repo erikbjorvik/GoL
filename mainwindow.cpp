@@ -7,7 +7,7 @@
 MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
 {
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(nyGenerasjon()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(nyGenerasjon())); //når timer signal: kall nyGenerasjon.
     timer->start(50); //Hver generasjon varer i 50ms.
 
     // set up viewing window
@@ -15,55 +15,71 @@ MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
     setGeometry(100, 100, 600, 600); // set resolution of window
 
     generasjonNr = 0;
-    //fyll array:
+
+    //fyll array med døde celler.
     for (int i = 0; i<40000; i++) {
         generasjon[i] = false;
     }
 
-    lesFil("/Users/ErikBjorvik/untitled1/test.txt");
+    lesFil("/Users/ErikBjorvik/untitled1/gosper.txt"); //Fil som skal leses, i Life 1.05 format
 
-    generasjon[20080] = true;
-    generasjon[20081] = true;
-    generasjon[20082] = true;
-    generasjon[20083] = true;
-    generasjon[20084] = true;
-    generasjon[20085] = true;
-    generasjon[20086] = true;
-    generasjon[20087] = true;
-
-    generasjon[20089] = true;
-    generasjon[20090] = true;
-    generasjon[20091] = true;
-    generasjon[20092] = true;
-    generasjon[20093] = true;
-
-    generasjon[20097] = true;
-    generasjon[20098] = true;
-    generasjon[20099] = true;
-
-    generasjon[20105] = true;
-    generasjon[20106] = true;
-    generasjon[20107] = true;
-    generasjon[20108] = true;
-    generasjon[20109] = true;
-    generasjon[20110] = true;
-    generasjon[20111] = true;
-
-    generasjon[20113] = true;
-    generasjon[20114] = true;
-    generasjon[20115] = true;
-    generasjon[20116] = true;
-    generasjon[20117] = true;
 
 }
 
 void MainWindow::lesFil(const char* const filnavn) {
     QFile file(filnavn);
+    QString linje;
     file.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&file);
 
-    while(!in.atEnd())
-    qDebug()<<"innhold: " << in.readLine();
+    if (QString::compare(in.readLine(), "#Life 1.05")) {
+        qDebug()<<"KUNNE IKKE LESE: Må være Life 1.05 format";
+        return;
+    }
+
+    bool mnstrStart = false;
+    int sx;
+    int sy;
+
+    int startIndeks;
+    int skrvC;
+    int linjeNr = 0;
+    while(!in.atEnd()) {
+        linje = in.readLine();
+        if (!mnstrStart) {
+            if (linje.startsWith("#D"))
+                qDebug()<<"BESKRIVELSE:"<<linje<<endl;
+            if (linje.startsWith("#P")) {
+                mnstrStart = true;
+                sx = linje.split(" ")[1].toInt();
+                sy = linje.split(" ")[2].toInt();
+                qDebug()<<"START MØNSTER FRA (x,y): "<<sx<<","<<sy<<endl;
+
+                startIndeks = ((20099 + sx) + (sy*199));
+                skrvC = startIndeks;
+                qDebug()<<"startindeks blir: " << startIndeks;
+            }
+        }
+
+        else {
+            qDebug()<<"linjelengde: " << linje.length();
+            for (int i=0; i<linje.length();i++) {
+                if (QString::compare(linje.at(i),"*")==0) {
+                    generasjon[skrvC]=true;
+                    qDebug()<<"*"<<" indeks: " <<skrvC;
+
+                 }
+                else {
+                     qDebug()<<"."<<" indeks: " <<skrvC;
+                }
+                skrvC++;
+            }
+            linjeNr++;
+            skrvC=startIndeks;
+            skrvC+=200*linjeNr;
+        }
+
+    }
     file.close();
 
 
@@ -112,35 +128,41 @@ void MainWindow::render(QPainter *painter)
     QColor farge;
     int antallNaboer;
     bool nesteCelle;
-
    for (int i = 0; i<40000; i++) {
-       antallNaboer=0;
-       nesteCelle = false;
+
+
         if (generasjon[i]!=false)
         farge = QColor((rand() % 255),(rand() % 255),(rand() % 255));
         else
         farge = QColor(Qt::white);
 
-
-        //qDebug()<<"cellevidde: " << celleVidde << "cellehoyde" << celleHoyde;
-
         painter->fillRect(xKor,yKor,width()/200,height()/200,farge); //cellene vil tilpasse seg vindustr.
 
-        if (((i)%199)!=0 && i!=0 && generasjon[i+1]==true) //høyre
+        xKor += (width()/200);
+        if (((i+1)%200)==0 && i!=0) {
+            yKor += height()/200;
+            xKor = 0;
+        }
+
+
+        nesteCelle = false;
+        antallNaboer=0;
+
+        if ((((i+1)%200)!=0 || i==0) && generasjon[i+1]==true) //høyre
             antallNaboer++;
-        if (((i)%199)!=1 && i!=0 && generasjon[i-1]==true) //venstre
+        if (((i+1)%200)!=1 && generasjon[i-1]==true) //venstre
             antallNaboer++;
         if ((i>199) && generasjon[i-200]==true) //over
             antallNaboer++;
-        if ((i<39601) && generasjon[i+200]==true) //under
+        if ((i<39799) && generasjon[i+200]==true) //under
             antallNaboer++;
-        if ((i>199) && ((i)%199)!=1 && i!=0 && generasjon[i-199]==true) //over-venstre
+        if (((i>199) && ((i+1)%200)!=1) && generasjon[i-199]==true) //over-venstre
             antallNaboer++;
-        if ((i>199) && ((i)%199)!=0 && i!=0 && generasjon[i-201]==true) //over-høyre
+        if ((i>199) && (((i+1)%200)!=0 || i==0) && generasjon[i-201]==true) //over-høyre
             antallNaboer++;
-        if ((i<39799) && ((i)%199)!=1 && i!=0 && generasjon[i+199]==true) //under-venstre
+        if ((i<39799) && (((i+1)%200)!=1) && generasjon[i+199]==true) //under-venstre
             antallNaboer++;
-        if ((i<39799) && ((i)%199)!=0 && i!=0 && generasjon[i+201]==true) //under-venstre
+        if ((i<39799) && (((i+1)%200)!=0 || i==0) && generasjon[i+201]==true) //under-høyre
             antallNaboer++;
 
 
@@ -158,12 +180,6 @@ void MainWindow::render(QPainter *painter)
         }
 
         neste[i] = nesteCelle;
-
-        xKor += (width()/200);
-        if ((i%200)==0 && i!=0) {
-            yKor += height()/200;
-            xKor = 0;
-        }
 
     }
 }

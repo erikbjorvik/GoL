@@ -13,8 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    generasjon.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    generasjon.h
 
 FORMS    += mainwindow.ui
