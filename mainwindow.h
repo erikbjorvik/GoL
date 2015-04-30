@@ -5,6 +5,8 @@
 #include <QDebug>
 #include <cstdio>
 
+class generasjon;
+
 class MainWindow : public QWindow
 {
     Q_OBJECT
@@ -15,15 +17,7 @@ public:
 
     void render(QPainter *painter);
     QTimer *timer;
-    int hoyde;
-    int vidde;
-    int generasjonNr;
-    bool generasjon[40000];
-    bool neste[40000];
-
-    const char* filnavn;
-    void lesFil(const char* const filnavn);
-
+    generasjon *g;
 
 public slots:
     void renderLater();
@@ -35,8 +29,7 @@ protected:
     void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
     void exposeEvent(QExposeEvent *event) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent* ev);
-
-     void contextMenuEvent(QContextMenuEvent *event);
+    void contextMenuEvent(QContextMenuEvent *event);
 
 private:
     QBackingStore backingStore; // drawing area

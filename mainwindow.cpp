@@ -2,6 +2,7 @@
 #include <QMenuBar>
 #include <fstream>
 #include <QMessageBox>
+#include "generasjon.h"
 
 
 MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
@@ -12,86 +13,17 @@ MainWindow::MainWindow(QWindow *parent) : QWindow(parent), backingStore(this)
 
     // set up viewing window
     create();
-    setGeometry(100, 100, 600, 600); // set resolution of window
+    setGeometry(100, 100, 600, 600); // setter vindustørrelse
 
-    generasjonNr = 0;
-
-    //fyll array med døde celler.
-    for (int i = 0; i<40000; i++) {
-        generasjon[i] = false;
-    }
-
-    lesFil("/Users/ErikBjorvik/untitled1/gosper.txt"); //Fil som skal leses, i Life 1.05 format
-
-
-}
-
-void MainWindow::lesFil(const char* const filnavn) {
-    QFile file(filnavn);
-    QString linje;
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&file);
-
-    if (QString::compare(in.readLine(), "#Life 1.05")) {
-        qDebug()<<"KUNNE IKKE LESE: Må være Life 1.05 format";
-        return;
-    }
-
-    bool mnstrStart = false;
-    int sx;
-    int sy;
-
-    int startIndeks;
-    int skrvC;
-    int linjeNr = 0;
-    while(!in.atEnd()) {
-        linje = in.readLine();
-        if (!mnstrStart) {
-            if (linje.startsWith("#D"))
-                qDebug()<<"BESKRIVELSE:"<<linje<<endl;
-            if (linje.startsWith("#P")) {
-                mnstrStart = true;
-                sx = linje.split(" ")[1].toInt();
-                sy = linje.split(" ")[2].toInt();
-                qDebug()<<"START MØNSTER FRA (x,y): "<<sx<<","<<sy<<endl;
-
-                startIndeks = ((20099 + sx) + (sy*199));
-                skrvC = startIndeks;
-                qDebug()<<"startindeks blir: " << startIndeks;
-            }
-        }
-
-        else {
-            qDebug()<<"linjelengde: " << linje.length();
-            for (int i=0; i<linje.length();i++) {
-                if (QString::compare(linje.at(i),"*")==0) {
-                    generasjon[skrvC]=true;
-                    qDebug()<<"*"<<" indeks: " <<skrvC;
-
-                 }
-                else {
-                     qDebug()<<"."<<" indeks: " <<skrvC;
-                }
-                skrvC++;
-            }
-            linjeNr++;
-            skrvC=startIndeks;
-            skrvC+=200*linjeNr;
-        }
-
-    }
-    file.close();
-
-
+    g->initGen();
+    g->lesFil("/Users/ErikBjorvik/untitled1/gosper.txt"); //Import i Life 1.05
 
 }
 
 void MainWindow::nyGenerasjon() {
-    if (generasjonNr!=0)
-        std::copy(neste,neste+40000,generasjon);
-
-    renderLater();
-    generasjonNr++;
+    g->initGen();
+    MainWindow::renderLater();
+    g->gNrPlussEn();
 }
 
 // the main rendering method
@@ -120,7 +52,7 @@ void MainWindow::renderNow()
     // a call to renderLater() at this point will enable animation...
 }
 
-// draw stuff inside window here
+// Her tegnes det som skal tegnes.
 void MainWindow::render(QPainter *painter)
 {
     int xKor = 0;
@@ -128,13 +60,12 @@ void MainWindow::render(QPainter *painter)
     QColor farge;
     int antallNaboer;
     bool nesteCelle;
-   for (int i = 0; i<40000; i++) {
+    for (int i = 0; i<40000; i++) {
 
-
-        if (generasjon[i]!=false)
-        farge = QColor((rand() % 255),(rand() % 255),(rand() % 255));
+    if (g->erLevende(i))
+            farge = QColor((rand() % 255),(rand() % 255),(rand() % 255));
         else
-        farge = QColor(Qt::white);
+            farge = QColor(Qt::white);
 
         painter->fillRect(xKor,yKor,width()/200,height()/200,farge); //cellene vil tilpasse seg vindustr.
 
@@ -147,39 +78,8 @@ void MainWindow::render(QPainter *painter)
 
         nesteCelle = false;
         antallNaboer=0;
-
-        if ((((i+1)%200)!=0 || i==0) && generasjon[i+1]==true) //høyre
-            antallNaboer++;
-        if (((i+1)%200)!=1 && generasjon[i-1]==true) //venstre
-            antallNaboer++;
-        if ((i>199) && generasjon[i-200]==true) //over
-            antallNaboer++;
-        if ((i<39799) && generasjon[i+200]==true) //under
-            antallNaboer++;
-        if (((i>199) && ((i+1)%200)!=1) && generasjon[i-199]==true) //over-venstre
-            antallNaboer++;
-        if ((i>199) && (((i+1)%200)!=0 || i==0) && generasjon[i-201]==true) //over-høyre
-            antallNaboer++;
-        if ((i<39799) && (((i+1)%200)!=1) && generasjon[i+199]==true) //under-venstre
-            antallNaboer++;
-        if ((i<39799) && (((i+1)%200)!=0 || i==0) && generasjon[i+201]==true) //under-høyre
-            antallNaboer++;
-
-
-        if (generasjon[i]==true) {
-            if (antallNaboer<2 || antallNaboer>3){
-                nesteCelle = false;
-            }
-            else if (antallNaboer==2 || antallNaboer==3){
-                nesteCelle = true;
-            }
-
-        }
-        else if (generasjon[i]==false && antallNaboer==3){
-                nesteCelle = true;
-        }
-
-        neste[i] = nesteCelle;
+        antallNaboer = g->finnAntallNaboer(i);
+        g->setNeste(i, g->bestemSkjebne(i));
 
     }
 }
